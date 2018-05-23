@@ -11,7 +11,4 @@ To set schedule for program, set
 | Guided   | export OMP_SCHEDULE="guided, chuck-size"  |
 | Auto     | export OMP_SCHEDULE="auto"                |
 
-
-
-
-
+https://docs.google.com/spreadsheets/d/12bM3aBkCE1B6ZJCXrr6DzSgiIoBY3BufZvZflts30zA/edit#gid=0
