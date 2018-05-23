@@ -24,9 +24,8 @@ private variable and (2) to cause the threads to compute their
 sums locally and then combine their local sums into a 
 single global value.
 
-History: Written by Tim Mattson, 11/99.
-
 */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <omp.h>
@@ -35,14 +34,12 @@ static long num_steps = 100000000;
 double step;
 int main (int argc , char ** argv)
 {
-//printf("START\n");
 	  int i;
           unsigned int num_threads = atoi(argv[1]);
 	  double pi, sum = 0.0;
 	  double start_time, run_time;
 
 	  step = 1.0/(double) num_steps;
-//	 for (i=1;i<=4;i++){
           sum = 0.0;
           omp_set_num_threads(num_threads);
 	  start_time = omp_get_wtime();
@@ -62,7 +59,6 @@ int main (int argc , char ** argv)
 	  run_time = omp_get_wtime() - start_time;
 //	  printf("\n pi is %f in %f seconds and %d threads\n",pi,run_time,i);
 	  printf("%lf\n",run_time);	  
-//}
 }	  
 
 
