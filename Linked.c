@@ -67,11 +67,16 @@ struct node * fetch_node(int k, struct node * p)
 
 
 int main(int argc, char *argv[]) {
+     if(argc < 2){
+         printf("Usage: ./a.out [number of threads]\n");
+         exit(0);
+     }
+     unsigned int specified_threads = atoi(argv[1]);
+     omp_set_num_threads(specified_threads);
      double start, end;
      struct node *p=NULL;
      struct node *temp=NULL;
      struct node *head=NULL;
-//     omp_set_num_threads(4);
      
 	 printf("Process linked list\n");
      printf("  Each linked list node will be processed by function 'processwork()'\n");
