@@ -41,7 +41,7 @@ int main(){
 //#pragma omp parallel
         //printf("Number of threads: %i \n",omp_get_num_threads());
 
-#pragma omp parallel for private(j,k,tmp)
+#pragma omp parallel for private(j,k,tmp) shared(A,B,C)
         for (i=0; i<Ndim; i++){
                 for (j=0; j<Mdim; j++){
                         tmp = 0;
