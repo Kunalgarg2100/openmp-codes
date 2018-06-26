@@ -1,3 +1,10 @@
+/*
+
+Optimisations done : 1) In quicksort function checking if the number of threads is just 1 then we run the serial version instead of the parellel one 
+                     
+		     2) In the partition subfunction removed the parellel region for the 'for loop'. (As anyway this function is done by just 1 thread) 
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <omp.h>
