@@ -50,6 +50,9 @@ void merge(int *arr, int size, int *tmp){
 void mergesort_omp_parallel(int *arr, int *tmp, int size, int threads){
 	if(size <= 1)
 		return;
+	int TID = omp_get_thread_num();
+	printf("Function is executed by thread %d\n", omp_get_thread_num());
+	
 	if(threads == 1)
 		mergesort_serialize(arr, tmp, size);
 	else
