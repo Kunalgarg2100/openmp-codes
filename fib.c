@@ -1,59 +1,57 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <omp.h>
-//#define NUM_THREADS 2
-/* function that uses recursivity
-* to compute fibonacci numbers
-*/
-long comp_fib_numbers(int n)
-{
-  // Basic algorithm: f(n) = f(n-1) + f(n-2)
-  long fnm1, fnm2, fn;
-  if ( n == 0 || n == 1 ) return(n);
-#pragma omp task shared(fnm1)
-  fnm1 = comp_fib_numbers(n-1);
-#pragma omp task shared(fnm2)
-  fnm2 = comp_fib_numbers(n-2);
-#pragma omp taskwait
-  fn = fnm1 + fnm2;
-  return(fn);
+#define ll long long int
+
+ll fibserial(int n){
+    if (n <= 1)
+        return n;
+    return fibserial(n-1) + fibserial(n-2);
 }
 
-int fibserial(int n)
+ll comp_fib_numbers(int n, int threads)
 {
-   if (n <= 1)
-      return n;
-   return fibserial(n-1) + fibserial(n-2);
+    long fnm1, fnm2, fn;                   // f(n) = f(n-1) + f(n-2)
+    if (n <= 1) return(n);
+    if (threads == 1) return fibserial(n);
+
+#pragma omp task shared(fnm1)
+    fnm1 = comp_fib_numbers(n-1, threads/2);
+#pragma omp task shared(fnm2)
+    fnm2 = comp_fib_numbers(n-2, threads - threads/2);
+#pragma omp taskwait
+
+    return(fnm1 + fnm2);
 }
 
 
 int main(int argc, char **argv)
 {
-  int n;
-double start_time, run_time;
-  long result;
-  if(argc<2){
-    printf("usage ./a.out <number>\n");
-    exit(1);
-  }
-  n = atoi(argv[1]);
-  //#pragma omp parallel num_threads(NUM_THREADS)
+    int n;
+    double start_time, run_time;
+    ll result;
+    if(argc < 2){
+        printf("Usage ./a.out <number>\n");
+        exit(1);
+    }
+    n = atoi(argv[1]);
+
+    omp_set_num_threads(omp_get_max_threads());
 #pragma omp parallel
-  {
-#pragma omp single nowait
     {
-      start_time = omp_get_wtime();
-      result = comp_fib_numbers(n);
-      run_time = omp_get_wtime() - start_time;
-  printf(" Time to compute(in parallel) : %f", run_time);
-    } // end of single region
-  } // end of parallel region
-  
+#pragma omp single nowait
+        {
+            start_time = omp_get_wtime();
+            result = comp_fib_numbers(n, omp_get_num_threads());
+            run_time = omp_get_wtime() - start_time;
+            printf("Ans: %lld  \n Time to compute(in parallel) : %f\n", result, run_time);
+        } 
+    }
 
-  start_time = omp_get_wtime();
-      result = fibserial(n);
-      run_time = omp_get_wtime() - start_time;
-  printf(" Time to compute(in series) : %f", run_time);
 
-  return 0;
+    start_time = omp_get_wtime();
+    result = fibserial(n);
+    run_time = omp_get_wtime() - start_time;
+    printf("Ans: %lld  \n Time to compute(in series) : %f\n", result, run_time);
+    return 0;
 }
