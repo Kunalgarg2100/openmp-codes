@@ -54,7 +54,7 @@ int partition_parellel(int * a, int p, int r)
     int lt_n = 0;
     int gt_n = 0;
 
-#pragma omp parallel for
+//#pragma omp parallel for
     for(i = p; i < r; i++){
         if(a[i] < a[r]){
             lt[lt_n++] = a[i];
@@ -79,7 +79,9 @@ int partition_parellel(int * a, int p, int r)
 void quicksort_parellel(int * a, int p, int r, int threads)
 {
     int div;
-//printf("ENTERED QUICKSORT!!");
+
+    if (threads == 1) return quicksort_serial(a,p,r);
+    else{
     if(p < r){
         div = partition_parellel(a, p, r);
 #pragma omp parallel sections
@@ -92,6 +94,7 @@ void quicksort_parellel(int * a, int p, int r, int threads)
         }
     }
 }
+}
 
 
 
@@ -99,7 +102,7 @@ void quicksort_parellel(int * a, int p, int r, int threads)
 int main(void)
 {
     int a[100010];
-int acopy[100010];
+    int acopy[100010];
     int i;
     double start_time, run_time;
     srand(5); 
@@ -109,11 +112,12 @@ int acopy[100010];
                 acopy[i] = a[i];
 
 	}
-//    printf("\n\nArray BEFORE sorting: \n");
-//		for( i = 0 ; i < 15; i++ ) 
-//		{
-//			printf("%d ", a[i]);
-//		}
+/*    printf("\n\nArray BEFORE sorting: \n");
+		for( i = 0 ; i < 15; i++ ) 
+		{
+			printf("%d ", a[i]);
+		}
+*/
     start_time = omp_get_wtime();
     quicksort_serial(a, 0, 99999);
     run_time = omp_get_wtime() - start_time;
@@ -121,7 +125,7 @@ int acopy[100010];
 
    int threads;
    omp_set_num_threads(omp_get_max_threads());
-
+//'export ompnumthreads' terminal command can be used to set the number of threads 
 #pragma omp parallel
 	{
 #pragma omp master
@@ -130,16 +134,17 @@ int acopy[100010];
 		} 
 	}
 
-//   printf("NUMBER OF THREADS : %d\n", threads);
+   printf("NUMBER OF THREADS : %d\n", threads);
    start_time = omp_get_wtime();
     quicksort_parellel(acopy, 0, 99999, threads);
     run_time = omp_get_wtime() - start_time;
     printf("Parellel quicksort took %f seconds \n", run_time);
 
-//    printf("\n\nArray after sorting\n");
-//    for(i = 0;i < 10; i++){
-//        printf("%d ", acopy[i]);
-//    }
-//    printf("\n");
+/*    printf("\n\nArray after sorting\n");
+    for(i = 0;i < 10; i++){
+        printf("%d ", acopy[i]);
+    }
+    printf("\n");
+*/
     return 0;
 }
