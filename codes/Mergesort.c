@@ -4,6 +4,7 @@
 #include<string.h>
 #include<time.h>
 
+/* Change the size here and run myscript.sh*/
 #define SIZE 10000000
 
 int arr[SIZE];
@@ -50,9 +51,9 @@ void merge(int *arr, int size, int *tmp){
 void mergesort_omp_parallel(int *arr, int *tmp, int size, int threads){
 	if(size <= 1)
 		return;
-	int TID = omp_get_thread_num();
-	printf("Function is executed by thread %d\n", omp_get_thread_num());
-	
+//	int TID = omp_get_thread_num();
+//	printf("Function is executed by thread %d\n", omp_get_thread_num());
+
 	if(threads == 1)
 		mergesort_serialize(arr, tmp, size);
 	else
@@ -77,7 +78,16 @@ void mergesort_serialize(int *arr, int *tmp, int size){
 }
 
 
-int main(){
+int main(int argc, char *argv[])
+{
+	if(argc < 2){
+		printf("Usage ./a.out <number_of_threads>\n");
+		exit(1);
+	}
+
+	int nthreads;
+	unsigned int thread_qty = atoi(argv[1]);
+	omp_set_num_threads(thread_qty);
 	int i;
 	double start_time, run_time;
 
@@ -94,14 +104,15 @@ int main(){
 			start_time = omp_get_wtime();
 			mergesort_omp_parallel(arr, tmp, SIZE, threads);
 			run_time = omp_get_wtime() - start_time;
-			printf(" Time to sort(in parallel) Array of size %d is %f seconds \n", SIZE, run_time);
+			printf("%f\n", run_time);
+			//printf(" Time to sort(in parallel) Array of size %d is %f seconds \n", SIZE, run_time);
 		}
 	}
-
-	start_time = omp_get_wtime();
-	mergesort_serialize(arr, tmp, SIZE);
-	run_time = omp_get_wtime() - start_time;
-	printf(" Time to sort(in serial) Array of size %d is %f seconds \n", SIZE, run_time);
-	/* TERMINATE PROGRAM */
+	/*
+	   start_time = omp_get_wtime();
+	   mergesort_serialize(arr, tmp, SIZE);
+	   run_time = omp_get_wtime() - start_time;
+	   printf(" Time to sort(in serial) Array of size %d is %f seconds \n", SIZE, run_time);
+	   */	/* TERMINATE PROGRAM */
 	return 0;
 }
