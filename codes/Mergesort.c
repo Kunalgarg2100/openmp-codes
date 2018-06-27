@@ -8,6 +8,7 @@
 #define SIZE 10000000
 
 int arr[SIZE];
+int arrcopy[SIZE];
 int tmp[SIZE];
 
 void printarr(int *arr, int n);
@@ -16,7 +17,8 @@ void mergesort_serialize(int *arr, int *tmp, int size);
 void merge(int *arr, int size, int *tmp);
 
 void printarr(int *arr, int n){
-	for(int i = 0;i < n; i++)
+	int i;
+	for(i = 0;i < n; i++)
 		printf("%d ", arr[i]);
 	printf("\n");
 }
@@ -93,8 +95,11 @@ int main(int argc, char *argv[])
 
 	/* Initialize */
 	srand(time(NULL));
-	for(int i=0; i < SIZE; i++)
+	for(i=0; i < SIZE; i++)
+	{
 		arr[i] = rand() % SIZE;
+		arrcopy[i] = arr[i];
+	}
 
 #pragma omp parallel
 	{
@@ -110,7 +115,7 @@ int main(int argc, char *argv[])
 	}
 	/*
 	   start_time = omp_get_wtime();
-	   mergesort_serialize(arr, tmp, SIZE);
+	   mergesort_serialize(arrcopy, tmp, SIZE);
 	   run_time = omp_get_wtime() - start_time;
 	   printf(" Time to sort(in serial) Array of size %d is %f seconds \n", SIZE, run_time);
 	   */	/* TERMINATE PROGRAM */

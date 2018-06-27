@@ -129,7 +129,6 @@ int main(int argc, char *argv[])
 	printf("Serial quicksort took %f seconds \n", run_time);*/
 
 	int threads;
-	omp_set_num_threads(omp_get_max_threads());
 
 #pragma omp parallel
 	{
