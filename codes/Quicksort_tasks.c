@@ -102,8 +102,16 @@ void quicksort_parellel(int * a, int p, int r, int threads)
 
 
 
-int main(void)
+int main(int argc, char *argv[])
 {
+	if(argc < 2){
+		printf("Usage ./a.out <number_of_threads>\n");
+		exit(1);
+	}
+	int nthreads;
+	unsigned int thread_qty = atoi(argv[1]);
+	omp_set_num_threads(thread_qty);
+
 	int i;
 	int sz = SIZE;
 	double start_time, run_time;
@@ -114,15 +122,11 @@ int main(void)
 		arrcopy[i] = arr[i];
 
 	}
-	//    printf("\n\nArray BEFORE sorting: \n");
-	//		for( i = 0 ; i < 15; i++ ) 
-	//		{
-	//			printf("%d ", a[i]);
-	//		}
-	start_time = omp_get_wtime();
+	
+	/*start_time = omp_get_wtime();
 	quicksort_serial(arr, 0, sz-1);
 	run_time = omp_get_wtime() - start_time;
-	printf("Serial quicksort took %f seconds \n", run_time);
+	printf("Serial quicksort took %f seconds \n", run_time);*/
 
 	int threads;
 	omp_set_num_threads(omp_get_max_threads());
@@ -132,20 +136,15 @@ int main(void)
 #pragma omp single nowait
 		{
 			threads =  omp_get_num_threads();
-			printf("%d\n",threads);
 			start_time = omp_get_wtime();
 			quicksort_parellel(arrcopy, 0, sz-1, threads);
 			run_time = omp_get_wtime() - start_time;
-			printf("Parellel quicksort took %f seconds \n", run_time);
+			printf("%f\n", run_time);
+			//printf("Parellel quicksort took %f seconds \n", run_time);
 		} 
 	}
 
 	//   printf("NUMBER OF THREADS : %d\n", threads);
 
-	//    printf("\n\nArray after sorting\n");
-	//    for(i = 0;i < 10; i++){
-	//        printf("%d ", acopy[i]);
-	//    }
-	//    printf("\n");
 	return 0;
 }
