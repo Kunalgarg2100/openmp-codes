@@ -17,7 +17,7 @@ void funcA(int a){
 void funcB(int a){
 	int TID = omp_get_thread_num();
 	if(TID != 0)
-	printf("In funcB : this section is executed by thread %d\n", omp_get_thread_num());
+		printf("In funcB : this section is executed by thread %d\n", omp_get_thread_num());
 	rec(a-2);
 
 }
@@ -39,16 +39,24 @@ void rec(int a)
 }
 
 
-int main(){
-        int i;
-        double start_time, run_time;
+int main(int argc, char *argv[]){
+	if(argc < 2){
+		printf("Usage ./a.out <number_of_threads>\n");
+		exit(1);
+	}
+	int nthreads;
+	unsigned int thread_qty = atoi(argv[1]);
+	omp_set_num_threads(thread_qty);
+	int i;
+	double start_time, run_time;
 
-        /* Initialize */
-        srand(time(NULL));
+	/* Initialize */
+	srand(time(NULL));
 
-        start_time = omp_get_wtime();
-	rec(15);
-        run_time = omp_get_wtime() - start_time;
+	start_time = omp_get_wtime();
+	rec(20);
+	run_time = omp_get_wtime() - start_time;
+	printf("%f",run_time);
 	return 0;
 }
 
