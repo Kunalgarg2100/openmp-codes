@@ -1,4 +1,5 @@
 #include<stdio.h>
+#include<sched.h>
 #include<omp.h>
 #include<stdlib.h>
 #include<string.h>
@@ -17,8 +18,7 @@ void mergesort_serialize(int *arr, int *tmp, int size);
 void merge(int *arr, int size, int *tmp);
 
 void printarr(int *arr, int n){
-	int i;
-	for(i = 0;i < n; i++)
+	for(int i = 0;i < n; i++)
 		printf("%d ", arr[i]);
 	printf("\n");
 }
@@ -53,11 +53,14 @@ void merge(int *arr, int size, int *tmp){
 void mergesort_omp_parallel(int *arr, int *tmp, int size, int threads){
 	if(size <= 1)
 		return;
-//	int TID = omp_get_thread_num();
-//	printf("Function is executed by thread %d\n", omp_get_thread_num());
 
-	if(threads == 1)
+	if(threads == 1){
+		int thread_num = omp_get_thread_num();
+	        int cpu_num = sched_getcpu();
+		printf("Function is executed by thread %3d is running on CPU %3d\n", thread_num,cpu_num);
 		mergesort_serialize(arr, tmp, size);
+	}
+
 	else
 	{
 #pragma omp task firstprivate(arr, tmp, size)
@@ -95,7 +98,7 @@ int main(int argc, char *argv[])
 
 	/* Initialize */
 	srand(time(NULL));
-	for(i=0; i < SIZE; i++)
+	for(int i=0; i < SIZE; i++)
 	{
 		arr[i] = rand() % SIZE;
 		arrcopy[i] = arr[i];
