@@ -1,10 +1,10 @@
 #define _GNU_SOURCE // To remove implicit declaration of function ‘sched_getcpu’
-#include<stdio.h>
-#include<sched.h>
-#include<omp.h>
-#include<stdlib.h>
-#include<string.h>
-#include<time.h>
+#include <stdio.h>
+#include <sched.h>
+#include <omp.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
 
 /* Change the size here and run myscript.sh*/
 #define SIZE 10000000
@@ -55,6 +55,7 @@ void merge(int *arr, int size, int *tmp){
 void mergesort_omp_parallel(int *arr, int *tmp, int size, int threads){
 	if(size <= 1)
 		return;
+
 	if(threads == 1){
 		int thread_num = omp_get_thread_num();
 		int cpu_num = sched_getcpu();
@@ -66,13 +67,17 @@ void mergesort_omp_parallel(int *arr, int *tmp, int size, int threads){
 
 	else
 	{
-#pragma omp task firstprivate(arr, tmp, size)
-		mergesort_omp_parallel(arr, tmp, size/2, threads/2);
-
-#pragma omp task firstprivate(arr, tmp, size)
-		mergesort_omp_parallel(arr + (size/2) , tmp + size / 2, size - size/2, threads - threads/2);
-
-#pragma omp taskwait 
+#pragma omp parallel sections
+		{
+#pragma omp section
+			{
+				mergesort_omp_parallel(arr, tmp, size/2, threads/2);
+			}
+#pragma omp section
+			{
+				mergesort_omp_parallel(arr + (size/2), tmp + size / 2, size - size/2, threads - threads/2);
+			}
+		}
 		merge(arr, size, tmp);
 	}
 }
@@ -81,7 +86,7 @@ void mergesort_serialize(int *arr, int *tmp, int size){
 	if(size <= 1)
 		return;
 	mergesort_serialize(arr, tmp, size/2);
-	mergesort_serialize(arr + (size/2), tmp + size/2, size - size/2);
+	mergesort_serialize(arr + (size/2), tmp + size / 2, size - size/2);
 	merge(arr, size, tmp);
 }
 
@@ -107,50 +112,47 @@ int main(int argc, char *argv[])
 		arr[i] = rand() % SIZE;
 		arrcopy[i] = arr[i];
 	}
+	int threads;
 
 #pragma omp parallel
 	{
-		int threads = omp_get_num_threads();
-#pragma omp single nowait
+#pragma omp single
 		{
-			start_time = omp_get_wtime();
-			mergesort_omp_parallel(arr, tmp, SIZE, threads);
-			run_time = omp_get_wtime() - start_time;
-			printf("%f\n", run_time);
-			printf(" Time to sort(in parallel) Array of size %d is %f seconds \n", SIZE, run_time);
+			threads = omp_get_num_threads();
 		}
 	}
-
-
-	/* Checking the sorted array for parallel merge sort */
-	for (i = 1; i < SIZE; i++)
-	{
-		if (!(arr[i - 1] <= arr[i]))
-		{
-			printf ("Implementation error parallelel: arr[%d]=%d > arr[%d]=%d\n", i - 1,
-					arr[i - 1], i, arr[i]);
-			return 1;
-		}
-	}
+	start_time = omp_get_wtime();
+	mergesort_omp_parallel(arr, tmp, SIZE, threads);
+	run_time = omp_get_wtime() - start_time;
+	printf("%f\n", run_time);
+	//printf(" Time to sort(in parallel) Array of size %d is %f seconds \n", SIZE, run_time);
 
 	start_time = omp_get_wtime();
 	mergesort_serialize(arrcopy, tmp, SIZE);
 	run_time = omp_get_wtime() - start_time;
 	printf(" Time to sort(in serial) Array of size %d is %f seconds \n", SIZE, run_time);
+	/* TERMINATE PROGRAM */
+	//
+	for (i = 1; i < SIZE; i++)
+	{
+		if (!(arr[i - 1] <= arr[i]))
+		{
+			printf ("Implementation error //el: a[%d]=%d > a[%d]=%d\n", i - 1,
+					arr[i - 1], i, arr[i]);
+			return 1;
+		}
+	}
 
-
-
-	/* Checking the sorted array for serial merge sort */
-
-	// for (i = 1; i < SIZE; i++)
-	// {
-	// 	if (!(arrcopy[i - 1] <= arrcopy[i]))
-	// 	{
-	// 		printf ("Implementation error serial: a[%d]=%d > a[%d]=%d\n", i - 1,
-	// 				arrcopy[i - 1], i, arrcopy[i]);
-	// 		return 1;
-	// 	}
-	// }
+	for (i = 1; i < SIZE; i++)
+	{
+		if (!(arrcopy[i - 1] <= arrcopy[i]))
+		{
+			printf ("Implementation error serial: a[%d]=%d > a[%d]=%d\n", i - 1,
+					arrcopy[i - 1], i, arrcopy[i]);
+			return 1;
+		}
+	}
 
 	return 0;
 }
+
