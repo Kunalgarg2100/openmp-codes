@@ -1,160 +1,106 @@
-/*
- Optimisations done : 
- 1) In quicksort function checking if the number of threads is just 1 then we run the serial version instead of the parellel one 
- 2) In the partition subfunction removed the parellel region for the 'for loop'. (As anyway this function is done by just 1 thread) 
-     */
-
+#define _GNU_SOURCE
 #include <stdio.h>
 #include <stdlib.h>
+#include <sched.h>
 #include <omp.h>
 
 #define SIZE 100000
 int arr[SIZE];
 int arrcopy[SIZE];
-int partition_serial(int * a, int p, int r)
-{
-	int lt[r-p];
-	int gt[r-p];
-	int i;
-	int j;
-	int key = a[r];
-	int lt_n = 0;
-	int gt_n = 0;
 
-	for(i = p; i < r; i++){
-		if(a[i] < a[r]){
-			lt[lt_n++] = a[i];
-		}else{
-			gt[gt_n++] = a[i];
-		}   
-	}   
-
-	for(i = 0; i < lt_n; i++){
-		a[p + i] = lt[i];
-	}   
-
-	a[p + lt_n] = key;
-
-	for(j = 0; j < gt_n; j++){
-		a[p + lt_n + j + 1] = gt[j];
-	}   
-
-	return p + lt_n;
+void swap(int *a, int *b){
+    int t = *a;
+    *a = *b;
+    *b = t;
 }
 
-void quicksort_serial(int * a, int p, int r)
-{
-	int div;
-	if(p < r){ 
-		div = partition_serial(a, p, r); 
-		quicksort_serial(a, p, div - 1); 
-		quicksort_serial(a, div + 1, r); 
-	}
+int partition_serial(int * arr, int low, int high){
+    int pivot = arr[high];
+    int i = (low - 1);
+    for(int j = low; j <= high - 1; j++){
+        // If current element is smaller than or equal to pivot
+        if(arr[j] <= pivot){
+            i++;
+            swap(&arr[i], &arr[j]);
+        }
+    }
+    swap(&arr[i+1], &arr[high]);
+    return (i + 1);
 }
 
-
-int partition_parellel(int * a, int p, int r)
-{
-	int lt[r-p];
-	int gt[r-p];
-	int i;
-	int j;
-	int key = a[r];
-	int lt_n = 0;
-	int gt_n = 0;
-
-//#pragma omp parallel for
-	for(i = p; i < r; i++){
-		if(a[i] < a[r]){
-			lt[lt_n++] = a[i];
-		}else{
-			gt[gt_n++] = a[i];
-		}
-	}
-
-	for(i = 0; i < lt_n; i++){
-		a[p + i] = lt[i];
-	}
-
-	a[p + lt_n] = key;
-
-	for(j = 0; j < gt_n; j++){
-		a[p + lt_n + j + 1] = gt[j];
-	}
-
-	return p + lt_n;
+void quicksort_serial(int *a, int low, int high){
+    if(low < high){ 
+        int div = partition_serial(a, low, high); 
+        quicksort_serial(a, low, div - 1); 
+        quicksort_serial(a, div + 1, high); 
+    }
 }
 
-void quicksort_parellel(int * a, int p, int r, int threads)
-{
-	if(threads == 1)
-		quicksort_serial(a, p, r);
+void quicksort_parellel(int *a, int low, int high, int threads){
+    if(threads == 1){
+        int thread_num = omp_get_thread_num();
+        int cpu_num = sched_getcpu();
+        printf("Range [%8d %8d] executed by thread %3d is running on CPU %3d\n", low, high, thread_num, cpu_num);
+        quicksort_serial(a, low, high);
+    }
 
-	else
-	{
-		int div;
-		//printf("ENTERED QUICKSORT!!");
-		if(p < r){
-			div = partition_parellel(a, p, r);
+    else{
+        if(low < high){
+            int div = partition_serial(a, low, high);
 #pragma omp parallel sections
-			{   
+{
 #pragma omp section
-				quicksort_parellel(a, p, div - 1, threads/2);
+            quicksort_parellel(a, low, div - 1, threads/2);
 #pragma omp section
-				quicksort_parellel(a, div + 1, r, threads - threads/2);
-
-			}
-		}
-	}
+            quicksort_parellel(a, div + 1, high, threads - threads/2);
+}
+        }
+    }
 }
 
 
 
 
-int main(void)
-{
-	int i;
-	int sz = SIZE;
-	double start_time, run_time;
-	srand(5); 
-	//	printf("Initializing the arrays with random numbers...\n");
-	for (i=0; i<sz; i++){
-		arr[i] = 1+(rand()%sz);
-		arrcopy[i] = arr[i];
+int main(int argc, char *argv[]){
+    if(argc < 2){
+        printf("Usage ./a.out <number_of_threads>\n");
+        exit(1);
+    }
+    int nthreads;
+    unsigned int thread_qty = atoi(argv[1]);
+    omp_set_num_threads(thread_qty);
 
-	}
-	//    printf("\n\nArray BEFORE sorting: \n");
-	//		for( i = 0 ; i < 15; i++ ) 
-	//		{
-	//			printf("%d ", a[i]);
-	//		}
-	start_time = omp_get_wtime();
-	quicksort_serial(arr, 0, sz-1);
-	run_time = omp_get_wtime() - start_time;
-	printf("Serial quicksort took %f seconds \n", run_time);
+    int i;
+    int sz = SIZE;
+    double start_time, run_time;
+    srand(5); 
+    //	printf("Initializing the arrays with random numbers...\n");
+    for (i=0; i<sz; i++){
+        arr[i] = 1+(rand()%sz);
+        arrcopy[i] = arr[i];
+    }
 
-	int threads;
-	omp_set_num_threads(omp_get_max_threads());
+    /*start_time = omp_get_wtime();
+      quicksort_serial(arr, 0, sz-1);
+      run_time = omp_get_wtime() - start_time;
+      printf("Serial quicksort took %f seconds \n", run_time);*/
 
-#pragma omp parallel
-	{
-#pragma omp master
-		{
-			threads =  omp_get_num_threads();
-			printf("%d\n",threads);
-		} 
-	}
+    int threads =  omp_get_num_threads();
+    start_time = omp_get_wtime();
+    quicksort_parellel(arrcopy, 0, sz-1, threads);
+    run_time = omp_get_wtime() - start_time;
+    printf("%f\n", run_time);
 
-	//   printf("NUMBER OF THREADS : %d\n", threads);
-	start_time = omp_get_wtime();
-	quicksort_parellel(arrcopy, 0, sz-1, threads);
-	run_time = omp_get_wtime() - start_time;
-	printf("Parellel quicksort took %f seconds \n", run_time);
+    /* Checking the sorted array for parallel quick sort */
+    for (i = 1; i < SIZE; i++)
+    {
+        if (!(arrcopy[i - 1] <= arrcopy[i]))
+        {
+            printf ("Implementation error parallelel: arr[%d]=%d > arr[%d]=%d\n", i - 1,
+                    arr[i - 1], i, arr[i]);
+            return 1;
+        }
+    }
 
-	//    printf("\n\nArray after sorting\n");
-	//    for(i = 0;i < 10; i++){
-	//        printf("%d ", acopy[i]);
-	//    }
-	//    printf("\n");
-	return 0;
+    return 0;
 }
