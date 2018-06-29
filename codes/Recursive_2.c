@@ -9,15 +9,15 @@ void funcB(int a);
 
 void funcA(int a){
 	int TID = omp_get_thread_num();
-	if(TID != 0)
-		printf("In funcA : this section is executed by thread %d\n", omp_get_thread_num());
+	/*if(TID != 0)
+		printf("In funcA : this section is executed by thread %d\n", omp_get_thread_num());*/
 	rec(a-1);
 }
 
 void funcB(int a){
 	int TID = omp_get_thread_num();
-	if(TID != 0)
-		printf("In funcB : this section is executed by thread %d\n", omp_get_thread_num());
+	/*if(TID != 0)
+		printf("In funcB : this section is executed by thread %d\n", omp_get_thread_num());*/
 	rec(a-2);
 
 }

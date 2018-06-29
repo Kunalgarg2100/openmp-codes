@@ -1,3 +1,4 @@
+#define _GNU_SOURCE // To remove implicit declaration of function ‘sched_getcpu’
 #include<stdio.h>
 #include<sched.h>
 #include<omp.h>
@@ -11,6 +12,7 @@
 int arr[SIZE];
 int arrcopy[SIZE];
 int tmp[SIZE];
+int *orig;
 
 void printarr(int *arr, int n);
 void mergesort_omp_parallel(int *arr, int *tmp, int size, int threads);
@@ -56,7 +58,9 @@ void mergesort_omp_parallel(int *arr, int *tmp, int size, int threads){
 	if(threads == 1){
 		int thread_num = omp_get_thread_num();
 		int cpu_num = sched_getcpu();
-		printf("Function is executed by thread %3d is running on CPU %3d\n", thread_num,cpu_num);
+        int l = arr - orig;
+        int r = l + size;
+		printf("Range [%d %d] executed by thread %3d is running on CPU %3d\n", l, r, thread_num,cpu_num);
 		mergesort_serialize(arr, tmp, size);
 	}
 
@@ -88,6 +92,7 @@ int main(int argc, char *argv[])
 		printf("Usage ./a.out <number_of_threads>\n");
 		exit(1);
 	}
+    orig = arr;
 
 	int nthreads;
 	unsigned int thread_qty = atoi(argv[1]);
