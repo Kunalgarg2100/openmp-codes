@@ -98,7 +98,7 @@ int main(int argc, char *argv[])
 	unsigned int thread_qty = atoi(argv[1]);
 	omp_set_num_threads(thread_qty);
 	int i;
-	double start_time, run_time;
+	double start_time, run_time_serial, run_time_parallel;
 
 	/* Initialize */
 	srand(time(NULL));
@@ -108,18 +108,22 @@ int main(int argc, char *argv[])
 		arrcopy[i] = arr[i];
 	}
 
+
+	start_time = omp_get_wtime();
+
 #pragma omp parallel
 	{
-		int threads = omp_get_num_threads();
 #pragma omp single nowait
 		{
-			start_time = omp_get_wtime();
+			int threads = omp_get_num_threads();
 			mergesort_omp_parallel(arr, tmp, SIZE, threads);
-			run_time = omp_get_wtime() - start_time;
-			printf("%f\n", run_time);
-			printf(" Time to sort(in parallel) Array of size %d is %f seconds \n", SIZE, run_time);
+
 		}
 	}
+
+	run_time_parallel = omp_get_wtime() - start_time;
+	//printf("%f\n", run_time_parallel);
+	printf(" Time to sort(in parallel) Array of size %d is %f seconds \n", SIZE, run_time_parallel);
 
 
 	/* Checking the sorted array for parallel merge sort */
@@ -135,9 +139,11 @@ int main(int argc, char *argv[])
 
 	start_time = omp_get_wtime();
 	mergesort_serialize(arrcopy, tmp, SIZE);
-	run_time = omp_get_wtime() - start_time;
-	printf(" Time to sort(in serial) Array of size %d is %f seconds \n", SIZE, run_time);
+	run_time_serial = omp_get_wtime() - start_time;
+	printf(" Time to sort(in serial) Array of size %d is %f seconds \n", SIZE, run_time_serial);
 
+	double speedup = run_time_serial / run_time_parallel;
+	printf("Speed up obtained : %f\n",speedup);
 
 
 	/* Checking the sorted array for serial merge sort */
